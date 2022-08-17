@@ -1,24 +1,51 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import { Connection } from 'mongoose';
 import * as request from 'supertest';
-import { AppModule } from './../src/app.module';
+import { DatabaseService } from '../src/database/database.service';
+import { AppModule } from '../src/app.module';
 
-describe('AppController (e2e)', () => {
-  let app: INestApplication;
+describe('UsersController', () => {
+  let dbConnection: Connection;
+  let httpServer: any;
+  let app: any;
 
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+  beforeAll(async () => {
+    const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
+    app = moduleRef.createNestApplication();
     await app.init();
+    dbConnection = moduleRef
+      .get<DatabaseService>(DatabaseService)
+      .getDbHandle();
+    httpServer = app.getHttpServer();
   });
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
+  afterAll(async () => {
+    await app.close();
+  });
+
+  beforeEach(async () => {
+    // await dbConnection.collection('users').deleteMany({});
+  });
+
+  describe('Get vaccine doses', () => {
+    it('Success with valid params', async () => {
+      const query = {
+        c: 'AT',
+        dateFrom: '2021-W45',
+        dateTo: '2021-W53',
+        rangeSize: 2,
+        sort: 'NumberDosesReceived',
+      };
+
+      const response = await request(httpServer)
+        .get('/vaccine-summary')
+        .query(query);
+
+      expect(response.status).toBe(200);
+      // expect(response.body).toMatchObject([userStub()]);
+    });
   });
 });
