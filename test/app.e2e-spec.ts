@@ -129,7 +129,7 @@ describe('VaccineTrackerModule', () => {
 
       expect(response.status).toBe(429);
       expect(response.body.message).toEqual(
-        'ThrottlerException: Too Many Requests',
+        'You have exceeded the limit of requests',
       );
     });
   });
